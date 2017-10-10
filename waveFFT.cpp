@@ -4,13 +4,14 @@
 #include <cstdlib>
 #include <cmath>
 #include <iterator>
+#include <string>
 #include "fft/FFTRealFixLen.h"
 
 // function prototypes
 void sinWaveGenerator1();	// first attempt at sin wave generator
 double* sinWaveGenerator2();	// second attempt at sin wave generator
-void fileCreation(double value[], int dataAmount);	// outputs to a file
-void fileCreation2(double value[], int dataAmount);	// outputs to a file
+double* sinWaveGenerator3();	// third attempt at sin wave generator
+void fileCreation(double value[], int dataAmount, std::string fileName);	// outputs to a file
 void fftConversion();	// converts waveform into fft
 
 int main()
@@ -24,7 +25,7 @@ int main()
 void sinWaveGenerator1()
 {
 	int sampleRate = 44100;		// samples per second
-	double samplesSecond = 1000;	// multiplier for cycles per second
+	double samplesSecond = 1000;	// multiplier for cycles per second (frequency)
 	double cycle = 2 * M_PI;	// 1 cycle length
 	double cycleSecond = cycle * samplesSecond;	// cycles per second
 
@@ -41,13 +42,13 @@ double* sinWaveGenerator2()
 {
 	int dataAmount = 512;					// number of samples recorded
 	double amplitude = 1;					// peak deviation of the function from zero
-	double ordinaryFrequency = 1000;			// number of oscillations (cycles) each second
-	double angularFrequency = 2 *M_PI * ordinaryFrequency;	// 2*pi*f measure of rotation
+	double ordinaryFrequency = 100;			// number of oscillations (cycles) each second
+	double angularFrequency = 2 *M_PI * ordinaryFrequency / 360;	// 2*pi*f measure of rotation
 	double phase = 0;					// phase shift
 //	int count = 0;	
 	//double waveForm;
 
-	std::ofstream outFile("record.txt", std::ios::out);
+//	std::ofstream outFile("record3.txt", std::ios::out);
 
 	double *value = new double[dataAmount];
 //	static double value[512];
@@ -66,25 +67,29 @@ double* sinWaveGenerator2()
 //	std::cout << count << std::endl;
 }
 
-void fileCreation(double value[], int dataAmount)
+double* sinWaveGenerator3()
 {
-	std::ofstream outFile("record.txt", std::ios::out);
-
-	if(!outFile)
-	{
-		std::cerr << "File could not be opened" << std::endl;
-		exit(1);
-	}
+	int dataAmount = 100;					// number of samples recorded
+	double amplitude = 1;					// peak deviation of the function from zero
+	double ordinaryFrequency = 200;			// number of oscillations (cycles) each second
+	double angularFrequency = 2 *M_PI * ordinaryFrequency / 360;	// 2*pi*f measure of rotation
+	double phase = 0;					// phase shift
 	
-	for(int time = 0; time < dataAmount; time++)
-	{
-		outFile << value[time] << std::endl;	// value to file
+	double *value = new double[512];
+
+	double tempTime = 0;
+	for(int time = 0; time < 512; time++)
+	{	
+		
+		value[time] = amplitude * sin(angularFrequency * tempTime + phase);// number of cycles per number of sample
+		tempTime += 1;
 	}
+	return value;
 }
 
-void fileCreation2(double value[], int dataAmount)
+void fileCreation(double value[], int dataAmount, std::string fileName)
 {
-	std::ofstream outFile("record2.txt", std::ios::out);
+	std::ofstream outFile(fileName.c_str(), std::ios::out);
 
 	if(!outFile)
 	{
@@ -107,10 +112,14 @@ void fftConversion()
 //	double *postFFT;		// array of FFT conversion
 	double postFFT[euclid];		// array of FFT conversion
 	double conversionFFT[(euclid / 2) - 2];	// converting FFT into readable data for plotting
+	std::string file1 = "1sinWave";
+	std::string file2 = "2FFTInitial";
+	std::string file3 = "3FFTPost";
 	
 	ffft::FFTRealFixLen <exponentOfTwo> fft;
 	
-	preFFT = sinWaveGenerator2();
+	preFFT = sinWaveGenerator3();
+	fileCreation(preFFT, euclid, file1);
 
 /*	
 	for(int i = 0; i < euclid; i++)
@@ -129,12 +138,14 @@ void fftConversion()
 
 //	std::cout << euclid << std::endl;
 	
-	fileCreation(postFFT, euclid);	// generates file of results
+	fileCreation(postFFT, euclid, file2);	// generates initial fft data
 	
-	for(int i = 1; i < ((euclid / 2) - 2); i++)
+//	for(int i = 1; i < ((euclid / 2) - 1); i++)
+	for(int i = 1; i < (euclid / 2); i++)
 	{
 		conversionFFT[i] = postFFT[i] + postFFT[(euclid / 2) + i];	// FFT a + bi removes the first and middle value
 	}	
 	
-	fileCreation2(conversionFFT, ((euclid / 2) -2));	
+//	fileCreation(conversionFFT, ((euclid / 2) - 1), file3);	// formats and reconfigures fft for analysis
+	fileCreation(conversionFFT, (euclid / 2), file3);	// formats and reconfigures fft for analysis	
 }
