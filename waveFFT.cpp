@@ -10,7 +10,7 @@
 // function prototypes
 void sinWaveGenerator1();	// first attempt at sin wave generator
 double* sinWaveGenerator2();	// second attempt at sin wave generator
-double* sinWaveGenerator3();	// third attempt at sin wave generator
+double* sinWaveGenerator3(int euclid, double sampleRate);	// third attempt at sin wave generator
 void fileCreation(double value[], int dataAmount, std::string fileName);	// outputs to a file
 void fftConversion();	// converts waveform into fft
 
@@ -67,23 +67,22 @@ double* sinWaveGenerator2()
 //	std::cout << count << std::endl;
 }
 
-double* sinWaveGenerator3()
-{
-	int dataAmount = 100;					// number of samples recorded
+double* sinWaveGenerator3(int euclid, double sampleRate)
+{		
+				
 	double amplitude = 1;					// peak deviation of the function from zero
-	double ordinaryFrequency = 200;			// number of oscillations (cycles) each second
-	double angularFrequency = 2 *M_PI * ordinaryFrequency / 360;	// 2*pi*f measure of rotation
+	double ordinaryFrequency = 100;			// number of oscillations (cycles) each second
+	double angularFrequency = 2 * M_PI * ordinaryFrequency;	// 2*pi*f measure of rotation
 	double phase = 0;					// phase shift
-	
-	double *value = new double[512];
+	double *value = new double[euclid];
+	double sampleFrequency = 1 / sampleRate;
 
-	double tempTime = 0;
-	for(int time = 0; time < 512; time++)
-	{	
-		
-		value[time] = amplitude * sin(angularFrequency * tempTime + phase);// number of cycles per number of sample
-		tempTime += 1;
+	for(int i = 0; i < euclid; i++)
+	{		
+		value[i] = amplitude * sin(angularFrequency * sampleFrequency + phase);	// number of cycles per number of sample
+		sampleFrequency += (1 / sampleRate);
 	}
+
 	return value;
 }
 
@@ -105,20 +104,24 @@ void fileCreation(double value[], int dataAmount, std::string fileName)
 
 void fftConversion()
 {
-	const int exponentOfTwo = 9;	// 2^exponentOfTwo
+	const int exponentOfTwo = 10;	// 2^exponentOfTwo
 	int euclid = pow(2, exponentOfTwo);	// 2^exponentOfTwo result
 	double *preFFT;			// array to be converted to FFT
 //	double preFFT[euclid];		// array to be converted to FFT
 //	double *postFFT;		// array of FFT conversion
 	double postFFT[euclid];		// array of FFT conversion
 	double conversionFFT[(euclid / 2) - 2];	// converting FFT into readable data for plotting
+	double sampleRate = 1500;	
+	double binFrequency = (double)sampleRate / (double)euclid;		// sample rate / FFT size
+	double bins[euclid];	// stores the bin size data
 	std::string file1 = "1sinWave";
 	std::string file2 = "2FFTInitial";
-	std::string file3 = "3FFTPost";
+	std::string file3 = "3FFTBins";	
+	std::string file4 = "4FFTAmplitude";
 	
 	ffft::FFTRealFixLen <exponentOfTwo> fft;
 	
-	preFFT = sinWaveGenerator3();
+	preFFT = sinWaveGenerator3(euclid, sampleRate);
 	fileCreation(preFFT, euclid, file1);
 
 /*	
@@ -138,7 +141,15 @@ void fftConversion()
 
 //	std::cout << euclid << std::endl;
 	
-	fileCreation(postFFT, euclid, file2);	// generates initial fft data
+//	fileCreation(postFFT, euclid, file2);	// generates initial fft data
+
+	for(int i = 0; i < euclid; i++)
+	{
+		bins[i] = (double)i * binFrequency;
+	}
+
+//	fileCreation(bins, euclid, file3);	// generates bin size data
+	
 	
 //	for(int i = 1; i < ((euclid / 2) - 1); i++)
 	for(int i = 1; i < (euclid / 2); i++)
@@ -147,5 +158,5 @@ void fftConversion()
 	}	
 	
 //	fileCreation(conversionFFT, ((euclid / 2) - 1), file3);	// formats and reconfigures fft for analysis
-	fileCreation(conversionFFT, (euclid / 2), file3);	// formats and reconfigures fft for analysis	
+//	fileCreation(conversionFFT, (euclid / 2), file3);	// formats and reconfigures fft for analysis	
 }
