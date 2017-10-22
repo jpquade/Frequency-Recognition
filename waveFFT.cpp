@@ -22,7 +22,7 @@ int main()
 double* sinWaveGenerator(int euclid, double sampleRate)
 {		
 				
-	double amplitude = 1;					// peak deviation of the function from zero
+	double amplitude = 10;					// peak deviation of the function from zero
 	double ordinaryFrequency = 100;				// number of oscillations (cycles) each second
 	double angularFrequency = 2 * M_PI * ordinaryFrequency;	// 2*pi*f measure of rotation
 	double phase = 0;					// phase shift
@@ -56,20 +56,21 @@ void fileCreation(double value[], int dataAmount, std::string fileName)
 
 void fftConversion()
 {
-	const int exponentOfTwo = 10;		// 2^exponentOfTwo
+	const int exponentOfTwo = 12;		// 2^exponentOfTwo
 	int euclid = pow(2, exponentOfTwo);	// 2^exponentOfTwo result
+	int euclidMod = (euclid / 2) - 1;
 	double *preFFT;				// array of sin wave values
 //	double preFFT[euclid];			// array to be converted to FFT
 //	double *postFFT;			// array of FFT conversion
 	double postFFT[euclid];			// array of FFT bins
-	double conversionFFT[(euclid / 2) - 1];	// converting FFT into readable data for plotting
+	double conversionFFT[euclidMod];	// converting FFT into readable data for plotting
 	double sampleRate = 1500;		// frequency of sampling rate
-	double binSize = ((double)euclid / 2) - 1;		// bins adjusted
-	double binFrequency = sampleRate / (2 * binSize);	// adjusted bin frequency
+	double binSize = (double)euclidMod;		// bins adjusted
+	double binFrequency = sampleRate / (binSize * 2);	// adjusted bin frequency
 	double bins[euclid];					// stores the bin size data
 	std::string file1 = "1sinWave";
 	std::string file2 = "2FFTInitial";
-	std::string file3 = "3FFTBins";	
+	std::string file3 = "3FFTFrequencyBins";	
 	std::string file4 = "4FFTAmplitude";
 	
 	ffft::FFTRealFixLen <exponentOfTwo> fft;
@@ -82,20 +83,17 @@ void fftConversion()
 	
 	fileCreation(postFFT, euclid, file2);		// generates initial fft data
 
-	for(int i = 0; i < euclid; i++)
+	for(int i = 0; i < euclidMod; i++)
 	{
 		bins[i] = (double)i * binFrequency;
 	}
 
 	fileCreation(bins, euclid, file3);		// generates bin size data
 	
-	
-//	for(int i = 1; i < ((euclid / 2) - 1); i++)
-	for(int i = 1; i < (euclid / 2); i++)
+	for(int i = 1; i < euclidMod; i++)
 	{
-		conversionFFT[i] = postFFT[i] + postFFT[(euclid / 2) + i];	// FFT a + bi removes the first and middle value
+		conversionFFT[i] = sqrt(pow(postFFT[i], 2) + pow((postFFT[(euclid / 2) + i]), 2)) / euclidMod;	// FFT a + bi removes the first and middle value
 	}	
 	
-//	fileCreation(conversionFFT, ((euclid / 2) - 1), file3);	// formats and reconfigures fft for analysis
-//	fileCreation(conversionFFT, (euclid / 2), file3);	// formats and reconfigures fft for analysis	
+	fileCreation(conversionFFT, euclidMod, file4);	// formats and reconfigures fft for analysis	
 }
